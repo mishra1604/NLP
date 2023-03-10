@@ -42,10 +42,10 @@ def test_regex_toc():
     chapter_sep = chapter + r"|\n\n"
     chapter_regex = r"^\s*" + chapter + r"\s*" + roman + r"\W\s*((?!" + chapter_sep + ")[\w\.\'\":]+)"
 
-    self_pattern = r"CHAPTER\s+(\w+)\.(?:\r\n|\s*)(.*)"
+    self_pattern = r"^CHAPTER\s+(\w+)\.?(?:\r\n|\s*)(.*)"
     gpt_pattern = r"CHAPTER\s+(\w+)\.\s*(.*)"
 
-    book_pattern =  r"^Book the (\w+)" #r"Book\s(?:\w+)\s(/w+\-\-)"
+    book_pattern =  r"^(?:Book|BOOK) (?:the|THE) (\w+)" #r"Book\s(?:\w+)\s(/w+\-\-)"
 
     bookChapters = []
     matches = re.findall(book_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
