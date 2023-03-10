@@ -35,7 +35,7 @@ def exec_regex_toc(file_book = None):
     return dictTOC
 
 def test_regex_toc():
-    fname="../../corpus/comp3225/tale.txt"
+    fname="../../corpus/comp3225/eval_book.txt"
 
     chapter = r'CHAPTER'
     roman = r'(?:[IVXLCDM]+)'
@@ -45,16 +45,29 @@ def test_regex_toc():
     self_pattern = r"CHAPTER\s+(\w+)\.(?:\r\n|\s*)(.*)"
     gpt_pattern = r"CHAPTER\s+(\w+)\.\s*(.*)"
 
+    book_pattern =  r"^Book the (\w+)" #r"Book\s(?:\w+)\s(/w+\-\-)"
 
-    matches = re.findall(self_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
-    toc = {}
-    print("length of matches", len(matches))
+    bookChapters = []
+    matches = re.findall(book_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
     for match in matches:
-        print("Chapter:", match[0])
-        print("Title:", match[1])
-        toc[match[0]] = match[1][:len(match[1])-1]
+        bookChapters.append(match)
     
-    print("length of toc", len(toc))
+    toc = {}
+    x = 0
+    matches = re.findall(self_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
+    for match in matches:
+        # print("Chapter:", match[0])
+        # print("Title:", match[1])
+        if len(bookChapters) >0:
+            if "("+str(bookChapters[x])+")" + " " + match[0] in toc:
+                x += 1
+                toc["("+str(bookChapters[x])+")" + " " + match[0]] = match[1][:len(match[1])-1]
+            else:
+                toc["("+str(bookChapters[x])+")" + " " + match[0]] = match[1][:len(match[1])-1]
+        else:
+            toc[match[0]] = match[1][:len(match[1])-1]
+    
+    print(toc)
     
 
 
