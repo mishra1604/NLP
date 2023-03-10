@@ -34,7 +34,29 @@ def exec_regex_toc(file_book = None):
     
     return dictTOC
 
+def test_regex_toc():
+    fname="../../corpus/comp3225/tale.txt"
+
+    chapter = r'CHAPTER'
+    roman = r'(?:[IVXLCDM]+)'
+    chapter_sep = chapter + r"|\n\n"
+    chapter_regex = r"^\s*" + chapter + r"\s*" + roman + r"\W\s*((?!" + chapter_sep + ")[\w\.\'\":]+)"
+
+    self_pattern = r"CHAPTER\s+(\w+)\.(?:\r\n|\s*)(.*)"
+    gpt_pattern = r"CHAPTER\s+(\w+)\.\s*(.*)"
+
+
+    matches = re.findall(self_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
+    toc = {}
+    print("length of matches", len(matches))
+    for match in matches:
+        print("Chapter:", match[0])
+        print("Title:", match[1])
+        toc[match[0]] = match[1][:len(match[1])-1]
+    
+    print("length of toc", len(toc))
+    
+
 
 if __name__ == '__main__':
-    fname="../../corpus/comp3225/eval_book.txt"
-    print(exec_regex_toc(fname))
+    test_regex_toc()
