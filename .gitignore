@@ -1,3 +1,6 @@
 Lib/
 Scripts/
 pyvenv.cfg
+pythonFiles/corpus/comp3225/tale.txt
+pythonFiles/corpus/comp3225/trial.txt
+pythonFiles/src/comp3225/comp3225_lab_regexp.ipynb
