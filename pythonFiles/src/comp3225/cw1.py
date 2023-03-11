@@ -35,16 +35,17 @@ def exec_regex_toc(file_book = None):
     return dictTOC
 
 def test_regex_toc():
-    fname="../../corpus/comp3225/virginia.txt"
+    fname="../../corpus/comp3225/christmas.txt"
 
     chapter = r'CHAPTER'
     roman = r'(?:[IVXLCDM]+)'
     chapter_sep = chapter + r"|\n\n"
     chapter_regex = r"^\s*" + chapter + r"\s*" + roman + r"\W\s*((?!" + chapter_sep + ")[\w\.\'\":]+)"
 
-    self_pattern = r"^CHAPTER\s+(\w+)\.?(?:\r\n(?:\r\n)?|\s*)(.*)"
+    self_pattern = r"^(?:CHAPTER|STAVE)\s(\w+)\.?(?:\r\n(?:\r\n)?|\s*)(.*)"
     second_pattern = r"^(\d+)\.\s+_(.*?\?*_)\s*$" #r"^(\d+)\.?\s+_([\w+\s])_\r\n"
     third_pattern = r"^([IVXLCDM]+)\s+(.*)"
+    stave_pattern = r"^(STAVE)[ ](\w+)\r\n(.*)"
     gpt_pattern = r"CHAPTER\s+(\w+)\.\s*(.*)"
 
     book_pattern =  r"^(Book|BOOK|PART|Part)\s*(?:the|THE)?\s*(\w+)" #r"Book\s(?:\w+)\s(/w+\-\-)"
@@ -52,6 +53,7 @@ def test_regex_toc():
     bookChapters = []
     matches = re.findall(book_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
     for match in matches:
+        # print(match)
         if match[0] == "PART":
             bookChapters.append("PART " + match[1])
         elif match[0] == "Part":
