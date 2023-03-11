@@ -35,7 +35,7 @@ def exec_regex_toc(file_book = None):
     return dictTOC
 
 def test_regex_toc():
-    fname="../../corpus/comp3225/eval_book.txt"
+    fname="../../corpus/comp3225/hard.txt"
 
     chapter = r'CHAPTER'
     roman = r'(?:[IVXLCDM]+)'
@@ -43,6 +43,7 @@ def test_regex_toc():
     chapter_regex = r"^\s*" + chapter + r"\s*" + roman + r"\W\s*((?!" + chapter_sep + ")[\w\.\'\":]+)"
 
     self_pattern = r"^CHAPTER\s+(\w+)\.?(?:\r\n(?:\r\n)?|\s*)(.*)"
+    second_pattern = r"^(\d+)\.\s+_(.*?\?*_)\s*$" #r"^(\d+)\.?\s+_([\w+\s])_\r\n"
     gpt_pattern = r"CHAPTER\s+(\w+)\.\s*(.*)"
 
     book_pattern =  r"^(Book|BOOK|PART|Part)\s*(?:the|THE)?\s*(\w+)" #r"Book\s(?:\w+)\s(/w+\-\-)"
@@ -50,7 +51,6 @@ def test_regex_toc():
     bookChapters = []
     matches = re.findall(book_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
     for match in matches:
-        print(match)
         if match[0] == "PART":
             bookChapters.append("Part " + match[1])
         elif match[0] == "Book":
@@ -63,10 +63,11 @@ def test_regex_toc():
     toc = {}
     x = 0
     matches = re.findall(self_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
+    if len(matches) == 0:
+        matches = re.findall(second_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
     for match in matches:
         # print("Chapter:", match[0])
         # print("Title:", match[1])
-        # print(match)
         if len(bookChapters) >0:
             if "("+str(bookChapters[x])+")" + " " + match[0] in toc:
                 x += 1
