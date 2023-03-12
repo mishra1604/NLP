@@ -35,16 +35,17 @@ def exec_regex_toc(file_book = None):
     return dictTOC
 
 def test_regex_toc():
-    fname="../../corpus/comp3225/christmas.txt"
+    fname="../../corpus/comp3225/pickwick.txt"
 
     chapter = r'CHAPTER'
     roman = r'(?:[IVXLCDM]+)'
     chapter_sep = chapter + r"|\n\n"
     chapter_regex = r"^\s*" + chapter + r"\s*" + roman + r"\W\s*((?!" + chapter_sep + ")[\w\.\'\":]+)"
 
-    self_pattern = r"^(?:CHAPTER|STAVE)\s(\w+)\.?(?:\r\n(?:\r\n)?|\s*)(.*)"
-    second_pattern = r"^(\d+)\.\s+_(.*?\?*_)\s*$" #r"^(\d+)\.?\s+_([\w+\s])_\r\n"
+    self_pattern = r"^(?:CHAPTER|STAVE)\s(\w+)\.?(?:\r\n(?:\r\n)?|\s*)((.*\s{2})+)" #(.*)"
+    second_pattern = r"^(\d+)\.\s+(_.*?\?*_)\s*$" #r"^(\d+)\.?\s+_([\w+\s])_\r\n"
     third_pattern = r"^([IVXLCDM]+)\s+(.*)"
+    tester = r"CHAPTER\s+(\w+)\.\s((.*\s{2})+)" #r"CHAPTER\s+(\w+)\.\s((.*\r{0,1}\n)+)"
     stave_pattern = r"^(STAVE)[ ](\w+)\r\n(.*)"
     gpt_pattern = r"CHAPTER\s+(\w+)\.\s*(.*)"
 
@@ -53,7 +54,6 @@ def test_regex_toc():
     bookChapters = []
     matches = re.findall(book_pattern, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
     for match in matches:
-        # print(match)
         if match[0] == "PART":
             bookChapters.append("PART " + match[1])
         elif match[0] == "Part":
@@ -75,16 +75,20 @@ def test_regex_toc():
     for match in matches:
         # print("Chapter:", match[0])
         # print("Title:", match[1])
+        chapterTitle = match[1]
+        chapterTitle = chapterTitle.replace("\r\n", " ")
+        chapterTitle = chapterTitle.replace("\r", "")
         if len(bookChapters) >0:
             if "("+str(bookChapters[x])+")" + " " + match[0] in toc:
                 x += 1
-                toc["("+str(bookChapters[x])+")" + " " + match[0]] = match[1][:len(match[1])-1]
+                toc["("+str(bookChapters[x])+")" + " " + match[0]] = chapterTitle
             else:
-                toc["("+str(bookChapters[x])+")" + " " + match[0]] = match[1][:len(match[1])-1]
+                toc["("+str(bookChapters[x])+")" + " " + match[0]] = chapterTitle
         else:
-            toc[match[0]] = match[1][:len(match[1])-1]
+            toc[match[0]] = chapterTitle #match[1][:len(match[1])-1]
     
     print(toc)
+    print("Length of TOC:", len(toc))
     
 
 
