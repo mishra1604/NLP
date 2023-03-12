@@ -35,7 +35,7 @@ def exec_regex_toc(file_book = None):
     return dictTOC
 
 def test_regex_toc():
-    fname="../../corpus/comp3225/eval_book.txt"
+    fname="../../corpus/comp3225/pickwick.txt"
 
     chapter = r'CHAPTER'
     roman = r'(?:[IVXLCDM]+)'
@@ -80,6 +80,7 @@ def test_regex_toc():
         chapterTitle = match[1]
         chapterTitle = chapterTitle.replace("\r\n", " ")
         chapterTitle = chapterTitle.replace("\r", "")
+        chapterTitle = chapterTitle.rstrip()
         if len(bookChapters) >0:
             if "("+str(bookChapters[x])+")" + " " + match[0] in toc:
                 x += 1

@@ -54,6 +54,7 @@ def exec_regex_toc( file_book = None ):
         chapterTitle = match[1]
         chapterTitle = chapterTitle.replace("\r\n", " ")
         chapterTitle = chapterTitle.replace("\r", "")
+        chapterTitle = chapterTitle.rstrip()
         if len(bookChapters) >0:
             if "("+str(bookChapters[x])+")" + " " + match[0] in dictTOC:
                 x += 1
