@@ -35,14 +35,14 @@ def exec_regex_toc(file_book = None):
     return dictTOC
 
 def test_regex_toc():
-    fname="../../corpus/comp3225/pickwick.txt"
+    fname="../../corpus/comp3225/friend.txt"
 
     chapter = r'CHAPTER'
     roman = r'(?:[IVXLCDM]+)'
     chapter_sep = chapter + r"|\n\n"
     chapter_regex = r"^\s*" + chapter + r"\s*" + roman + r"\W\s*((?!" + chapter_sep + ")[\w\.\'\":]+)"
 
-    self_pattern = r"^(?:CHAPTER|STAVE)\s(\w+)\.?(?:\r\n(?:\r\n)?|\s*)((.*\s{2})+)" #(.*)"
+    self_pattern = r"^(?:CHAPTER|STAVE|Chapter)\s(\w+)\.?(?:\r\n(?:\r\n)?|\s*)((.*\s{2})+)" #(.*)"
     second_pattern = r"^(\d+)\.\s+(_.*?\?*_)\s*$" #r"^(\d+)\.?\s+_([\w+\s])_\r\n"
     third_pattern = r"^([IVXLCDM]+)\s+(.*)"
     tester = r"CHAPTER\s+(\w+)\.\s((.*\s{2})+)" #r"CHAPTER\s+(\w+)\.\s((.*\r{0,1}\n)+)"
