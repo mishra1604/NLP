@@ -4,3 +4,17 @@ pyvenv.cfg
 pythonFiles/corpus/comp3225/tale.txt
 pythonFiles/corpus/comp3225/trial.txt
 pythonFiles/src/comp3225/comp3225_lab_regexp.ipynb
+pythonFiles/corpus/comp3225/bleak.txt
+pythonFiles/corpus/comp3225/christmas.txt
+pythonFiles/corpus/comp3225/daughter.txt
+pythonFiles/corpus/comp3225/friend.txt
+pythonFiles/corpus/comp3225/hard.txt
+pythonFiles/corpus/comp3225/pickwick.txt
+pythonFiles/corpus/comp3225/twist.txt
+pythonFiles/corpus/comp3225/virginia.txt
+pythonFiles/corpus/comp3225/women.txt
+
+pythonFiles/src/comp3225/eval_book.txt
+pythonFiles/src/comp3225/eval_chapter.txt
+pythonFiles/src/comp3225/ontonotes_parsed/
+pythonFiles/src/comp3225/template.py
