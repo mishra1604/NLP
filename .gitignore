@@ -16,5 +16,6 @@ pythonFiles/corpus/comp3225/women.txt
 
 pythonFiles/src/comp3225/eval_book.txt
 pythonFiles/src/comp3225/eval_chapter.txt
-pythonFiles/src/comp3225/ontonotes_parsed/
+pythonFiles/src/comp3225/ontonotes_parsed.json
 pythonFiles/src/comp3225/template.py
+pythonFiles/src/comp3225/toc.json
