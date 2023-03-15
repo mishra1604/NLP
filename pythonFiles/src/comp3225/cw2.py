@@ -13,16 +13,38 @@ def test_question_regex():
     fname="../../corpus/comp3225/eval_chapter.txt"
 
     # question regex for a chapter in a book
-    question = r"(?:\.|\?|^|\,|\!)\s?(.?[\w+\s\,\’\‘\-]+\?.?)" #(?:\.|\?)\s+(.*\?)\s+ 
+    question = r"[\.\?^\,\!]\s?(.?[\w+\s\,\’\‘\-]+\?.?)" #(?:\.|\?|^|\,|\!)\s?(.?[\w+\s\,\’\‘\-]+\?.?)--original   (?:\.|\?|^|\,|\!)((\s?.?[\w+\s\,\’\‘\-]+\?.?)+)--new
+    tester = r"\b\‘?[A-Z][\w\s\,\’\‘\-]*\?\’?"       #\b[A-Z][\w\s\,\’\‘\-]*\?
 
-    repeatQuestion = r"("+question+r")"+r"+"
-
-    matches = re.findall(question, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
-    print(matches)
+    questionSentences = []
+    matches = re.findall(tester, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
     for match in matches:
-        pass
+        question = match
+        question = question.replace("\r\n", " ")
+        question = question.replace("\r", "")
+        question = question.rstrip()
+        questionSentences.append(question)
     
-    print("len(matches):", len(matches))
+    # print(questionSentences, "\nlenght:", len(questionSentences))
+
+    filterRegex = r"\,\s\‘(.*)\’"
+    filteredQuestions = []
+    for match in questionSentences:
+        filteredMatch = re.findall(filterRegex, match)
+        if filteredMatch:
+            # print(filteredMatch)
+            filteredQuestions.append(filteredMatch[0])
+        else:
+            if match[-1] == "’": match = match[:-1]
+            if match[0] == "‘": match = match[1:]
+            filteredQuestions.append(match)
+    
+    print(filteredQuestions, "\nlenght:", len(filteredQuestions))
+
+    
 
 if __name__ == '__main__':
     test_question_regex()
+    # text = "I said, "
+    # questions = re.findall(r'\b[A-Z][\w\s]*\?', text)
+    # print(questions)
