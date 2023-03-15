@@ -13,11 +13,16 @@ def test_question_regex():
     fname="../../corpus/comp3225/eval_chapter.txt"
 
     # question regex for a chapter in a book
-    question = r"(?:\.|\?|^)\s?(.?[\w+\s]+\?.?\s)" #(?:\.|\?)\s+(.*\?)\s+ 
+    question = r"(?:\.|\?|^|\,|\!)\s?(.?[\w+\s\,\’\‘\-]+\?.?)" #(?:\.|\?)\s+(.*\?)\s+ 
+
+    repeatQuestion = r"("+question+r")"+r"+"
 
     matches = re.findall(question, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
+    print(matches)
     for match in matches:
-        print(match)
+        pass
+    
+    print("len(matches):", len(matches))
 
 if __name__ == '__main__':
     test_question_regex()
