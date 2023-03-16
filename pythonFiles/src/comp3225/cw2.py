@@ -10,7 +10,7 @@ logger = logging.getLogger( __name__ )
 logging.basicConfig( level=logging.INFO, format=LOG_FORMAT )
 
 def test_question_regex():
-    fname="../../corpus/comp3225/eval_chapter.txt"
+    fname="../../corpus/comp3225/trial.txt"
 
     # question regex for a chapter in a book
     question = r"[\.\?^\,\!]\s?(.?[\w+\s\,\’\‘\-]+\?.?)" #(?:\.|\?|^|\,|\!)\s?(.?[\w+\s\,\’\‘\-]+\?.?)--original   (?:\.|\?|^|\,|\!)((\s?.?[\w+\s\,\’\‘\-]+\?.?)+)--new
@@ -25,7 +25,7 @@ def test_question_regex():
         question = question.rstrip()
         questionSentences.append(question)
     
-    # print(questionSentences, "\nlenght:", len(questionSentences))
+    # print(questionSentences, "\nlenght of question sentences:", len(questionSentences))
 
     filterRegex = r"\,\s\‘(.*)\’"
     filteredQuestions = []
