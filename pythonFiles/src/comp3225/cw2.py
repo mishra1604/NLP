@@ -14,7 +14,7 @@ def test_question_regex():
 
     # question regex for a chapter in a book
     question = r"[\.\?^\,\!]\s?(.?[\w+\s\,\’\‘\-]+\?.?)" #(?:\.|\?|^|\,|\!)\s?(.?[\w+\s\,\’\‘\-]+\?.?)--original   (?:\.|\?|^|\,|\!)((\s?.?[\w+\s\,\’\‘\-]+\?.?)+)--new
-    tester = r"\b\‘?[A-Z][\w\s\,\’\‘\-]*\?\’?"       #\b[A-Z][\w\s\,\’\‘\-]*\?
+    tester = r"\b\‘?[A-Z][\w\s\,\’\‘\;\“\”\-]*\?\’?"       #\b[A-Z][\w\s\,\’\‘\-]*\?
 
     questionSentences = []
     matches = re.findall(tester, codecs.open(fname,"r",encoding="utf-8").read(), re.MULTILINE)
@@ -27,13 +27,19 @@ def test_question_regex():
     
     # print(questionSentences, "\nlenght of question sentences:", len(questionSentences))
 
-    filterRegex = r"\,\s\‘(.*)\’"
+    filterRegex = r"\,\s\‘(.*)\’?"
+    filter_2 = r"\;\s(.*)"
     filteredQuestions = []
     for match in questionSentences:
         filteredMatch = re.findall(filterRegex, match)
+        if len(filteredMatch) == 0:
+            filteredMatch = re.findall(filter_2, match)
         if filteredMatch:
-            # print(filteredMatch)
-            filteredQuestions.append(filteredMatch[0])
+            print(filteredMatch)
+            question = filteredMatch[0]
+            if question[-1] == "’": question = question[:-1]
+            if question[0] == "‘": question = question[1:]
+            filteredQuestions.append(question)
         else:
             if match[-1] == "’": match = match[:-1]
             if match[0] == "‘": match = match[1:]
@@ -45,6 +51,9 @@ def test_question_regex():
 
 if __name__ == '__main__':
     test_question_regex()
-    # text = "I said, "
-    # questions = re.findall(r'\b[A-Z][\w\s]*\?', text)
-    # print(questions)
+#     text = """‘Well Piggywiggies,’ said R. W., ‘how de do to-night? What I was
+# thinking of, my dear,’ to Mrs Wilfer already seated in a corner with
+# folded gloves, ‘was, that as we have let our first floor so well, and as
+# we have now no place in which you could teach pupils even if pupils--’"""
+#     questions = re.findall(r"\b\‘?[A-Z][\w\s\,\’\‘\;\“\”\-\.]*\?\’?", text)
+#     print(questions)
