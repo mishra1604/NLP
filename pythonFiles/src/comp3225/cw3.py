@@ -10,9 +10,11 @@ logger = logging.getLogger( __name__ )
 logging.basicConfig( level=logging.INFO, format=LOG_FORMAT )
 logger.info('logging started')
 
+import time
+
 max_iter = 20
 max_files = 50
-display_label_subset = [ 'B-DATE', 'I-DATE', 'B-GPE', 'I-GPE', 'B-PERSON', 'I-PERSON', 'O' ]
+display_label_subset = [ 'B-DATE', 'I-DATE', 'O', 'B-CARD', 'I-CARD', 'B-ORD', 'I-ORD', 'B-NORP', 'I-NORP']
 
 
 def create_dataset( max_files = None ):
@@ -237,6 +239,8 @@ def crf_ner():
         main_string = main_string.replace("\n", " ")
         chapter_string += main_string
     
+    # chapter_string = "I was not mistaken; for the mop came into the schoolroom before long, and turned out Mr. Mell and me, who lived where we could, and got on how we could, for some days, during which we were always in the way of two or three young women, who had rarely shown themselves before, and were so continually in the midst of dust that I sneezed almost as much as if Salem House had been a great snuff-box."
+
     # tokenize chapter_string
     chapter_tokens = nltk.word_tokenize(chapter_string)
 
@@ -255,8 +259,64 @@ def crf_ner():
     # predict the labels for chapter_features
     chapter_labels = crf_model.predict_single(chapter_features)
 
-    print("Chapter Labels:\n", chapter_labels)
+
+    dictNE = {
+        "CARDINAL": [],
+        "ORDINAL": [],
+        "DATE": [],
+        "NORP": []
+    }
+
+    counter = 0
+
+    while counter < len(chapter_labels):
+        if chapter_labels[counter] == "B-CARDINAL":
+            cardinal = ""
+            cardinal += chapter_tokens[counter]
+            counter += 1
+            while chapter_labels[counter] == "I-CARDINAL":
+                cardinal += " " + chapter_tokens[counter]
+                counter += 1
+            if cardinal not in dictNE["CARDINAL"]:
+                dictNE["CARDINAL"].append(cardinal)
+        elif chapter_labels[counter] == "B-DATE":
+            date = ""
+            date += chapter_tokens[counter]
+            counter += 1
+            while chapter_labels[counter] == "I-DATE":
+                date += " " + chapter_tokens[counter]
+                counter += 1
+            if date not in dictNE["DATE"]:
+                dictNE["DATE"].append(date)
+        elif chapter_labels[counter] == "B-ORDINAL":
+            ordinal = ""
+            ordinal += chapter_tokens[counter]
+            counter += 1
+            while chapter_labels[counter] == "I-ORDINAL":
+                ordinal += " " + chapter_tokens[counter]
+                counter += 1
+            if ordinal not in dictNE["ORDINAL"]:
+                dictNE["ORDINAL"].append(ordinal)
+        elif chapter_labels[counter] == "B-NORP":
+            norp = ""
+            norp += chapter_tokens[counter]
+            counter += 1
+            while chapter_labels[counter] == "I-NORP":
+                norp += " " + chapter_tokens[counter]
+                counter += 1
+            if norp not in dictNE["NORP"]:
+                dictNE["NORP"].append(norp)
+        else:
+            counter += 1
+
+    print("\n final answer: \n", dictNE)
+    
+    answer = input("Do you want to print the labels? (y/n): ")
+    if answer == "y": print("\n\nLabels:\n", [(word, label) for word, label in zip(chapter_tokens, chapter_labels)])
 
 
 if __name__ == '__main__':
+    start = time.time()
     crf_ner()
+    end = time.time()
+    print("Time taken: ", end - start)
