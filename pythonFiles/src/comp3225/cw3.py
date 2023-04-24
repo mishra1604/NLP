@@ -220,7 +220,7 @@ def task1_train_crf_model( X_train, Y_train, max_iter, labels ) :
         c1=0.1,
         c2=0.1,
         max_iterations=max_iter,
-        all_possible_transitions=False,
+        all_possible_transitions=True,
     )
     crf.fit(X_train, Y_train)
     return crf
@@ -231,33 +231,47 @@ def crf_ner():
     # open the file and get the sentences
     with open(fname, 'r') as f:
         lines = f.readlines()
-    
-    chapter_string = ""
 
+    chapter_paragraphs = []
+    
+    paragraph_string = ""
     for line in lines:
         main_string = line
-        main_string = main_string.replace("\n", " ")
-        chapter_string += main_string
+        if len(main_string) == 1:
+            if len(paragraph_string) > 0:
+                chapter_paragraphs.append(paragraph_string)
+                paragraph_string = ""
+        else:
+            main_string = main_string.replace("\n", " ")
+            paragraph_string += main_string
     
-    # chapter_string = "I was not mistaken; for the mop came into the schoolroom before long, and turned out Mr. Mell and me, who lived where we could, and got on how we could, for some days, during which we were always in the way of two or three young women, who had rarely shown themselves before, and were so continually in the midst of dust that I sneezed almost as much as if Salem House had been a great snuff-box."
-
-    # tokenize chapter_string
-    chapter_tokens = nltk.word_tokenize(chapter_string)
+    chapter_string = """Next morning Mr. Sharp came back. Mr. Sharp was the first master, and
+superior to Mr. Mell. Mr. Mell took his meals with the boys, but
+Mr. Sharp dined and supped at Mr. Creakle’s table. He was a limp,
+delicate-looking gentleman, I thought, with a good deal of nose, and a
+way of carrying his head on one side, as if it were a little too heavy
+for him. His hair was very smooth and wavy; but I was informed by the
+very first boy who came back that it was a wig (a second-hand one HE
+said), and that Mr. Sharp went out every Saturday afternoon to get it
+curled."""
+    
+    # create tokens for all the paragraphs in the chapter
+    chapter_tokens = [nltk.word_tokenize(paragraph) for paragraph in chapter_paragraphs]
 
     # get the POS tags for the tokens
-    chapter_pos_tags = nltk.pos_tag(chapter_tokens)
+    chapter_pos_tags = [nltk.pos_tag(paragraph_tokens) for paragraph_tokens in chapter_tokens]
 
     # create a list of tuples for the tokens and POS tags
-    chapter_tokens_pos_tags = [(token, pos_tag) for token, pos_tag in chapter_pos_tags]
+    chapter_tokens_pos_tags = [[(token, pos_tag) for token, pos_tag in paragraph_pos_tags] for paragraph_pos_tags in chapter_pos_tags]
 
     # get the chapter features
-    chapter_features = sent2features(chapter_tokens_pos_tags, word2features_func = task2_word2features)
+    chapter_features = [sent2features(paragraph_tokens_pos_tags, word2features_func = task2_word2features) for paragraph_tokens_pos_tags in chapter_tokens_pos_tags]
 
     # load the model
     crf_model = exec_task( word2features_func = task2_word2features, train_crf_model_func = task1_train_crf_model, max_files = max_files, max_iter = max_iter, display_label_subset = display_label_subset )
 
-    # predict the labels for chapter_features
-    chapter_labels = crf_model.predict_single(chapter_features)
+    # predict the labels for every paragraph in chapter_features
+    chapter_labels = [crf_model.predict_single(paragraph_features) for paragraph_features in chapter_features]
 
 
     dictNE = {
@@ -267,53 +281,55 @@ def crf_ner():
         "NORP": []
     }
 
-    counter = 0
 
-    while counter < len(chapter_labels):
-        if chapter_labels[counter] == "B-CARDINAL":
-            cardinal = ""
-            cardinal += chapter_tokens[counter]
-            counter += 1
-            while chapter_labels[counter] == "I-CARDINAL":
-                cardinal += " " + chapter_tokens[counter]
+    for paragraph_label in chapter_labels:
+        counter = 0
+        paragraph_tokens = chapter_tokens[chapter_labels.index(paragraph_label)]
+        while counter < len(paragraph_label):
+            if paragraph_label[counter] == "B-CARDINAL":
+                cardinal = ""
+                cardinal += paragraph_tokens[counter]
                 counter += 1
-            if cardinal not in dictNE["CARDINAL"]:
-                dictNE["CARDINAL"].append(cardinal)
-        elif chapter_labels[counter] == "B-DATE":
-            date = ""
-            date += chapter_tokens[counter]
-            counter += 1
-            while chapter_labels[counter] == "I-DATE":
-                date += " " + chapter_tokens[counter]
+                while paragraph_label[counter] == "I-CARDINAL":
+                    cardinal += " " + paragraph_tokens[counter]
+                    counter += 1
+                if cardinal not in dictNE["CARDINAL"]:
+                    dictNE["CARDINAL"].append(cardinal.lower())
+            elif paragraph_label[counter] == "B-DATE":
+                date = ""
+                date += paragraph_tokens[counter]
                 counter += 1
-            if date not in dictNE["DATE"]:
-                dictNE["DATE"].append(date)
-        elif chapter_labels[counter] == "B-ORDINAL":
-            ordinal = ""
-            ordinal += chapter_tokens[counter]
-            counter += 1
-            while chapter_labels[counter] == "I-ORDINAL":
-                ordinal += " " + chapter_tokens[counter]
+                while paragraph_label[counter] == "I-DATE":
+                    date += " " + paragraph_tokens[counter]
+                    counter += 1
+                if date not in dictNE["DATE"]:
+                    dictNE["DATE"].append(date.lower())
+            elif paragraph_label[counter] == "B-ORDINAL":
+                ordinal = ""
+                ordinal += paragraph_tokens[counter]
+                print("problem solved")
                 counter += 1
-            if ordinal not in dictNE["ORDINAL"]:
-                dictNE["ORDINAL"].append(ordinal)
-        elif chapter_labels[counter] == "B-NORP":
-            norp = ""
-            norp += chapter_tokens[counter]
-            counter += 1
-            while chapter_labels[counter] == "I-NORP":
-                norp += " " + chapter_tokens[counter]
+                while paragraph_label[counter] == "I-ORDINAL":
+                    ordinal += " " + paragraph_tokens[counter]
+                    counter += 1
+                if ordinal not in dictNE["ORDINAL"]:
+                    dictNE["ORDINAL"].append(ordinal.lower())
+            elif paragraph_label[counter] == "B-NORP":
+                norp = ""
+                norp += paragraph_tokens[counter]
                 counter += 1
-            if norp not in dictNE["NORP"]:
-                dictNE["NORP"].append(norp)
-        else:
-            counter += 1
+                while paragraph_label[counter] == "I-NORP":
+                    norp += " " + paragraph_tokens[counter]
+                    counter += 1
+                if norp not in dictNE["NORP"]:
+                    dictNE["NORP"].append(norp.lower())
+            else:
+                counter += 1
 
     print("\n final answer: \n", dictNE)
     
     answer = input("Do you want to print the labels? (y/n): ")
-    if answer == "y": print("\n\nLabels:\n", [(word, label) for word, label in zip(chapter_tokens, chapter_labels)])
-
+    if answer == "y": print("\n\nLabels:\n", [[(token, label) for token, label in zip(paragraph_tokens, paragraph_labels)] for paragraph_tokens, paragraph_labels in zip(chapter_tokens, chapter_labels)])
 
 if __name__ == '__main__':
     start = time.time()
