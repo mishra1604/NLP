@@ -26,8 +26,7 @@ logger = logging.getLogger( __name__ )
 logging.basicConfig( level=logging.INFO, format=LOG_FORMAT )
 logger.info('logging started')
 
-max_iter = 20
-max_files = 50
+
 display_label_subset = [ 'B-DATE', 'I-DATE', 'O', 'B-CARD', 'I-CARD', 'B-ORD', 'I-ORD', 'B-NORP', 'I-NORP']
 
 def create_dataset( max_files = None, dataset_file = None ):
@@ -132,7 +131,7 @@ def print_F1_scores( micro_F1 ) :
     for label in micro_F1 :
         logger.info( "%-15s -> f1 %0.2f ; prec %0.2f ; recall %0.2f" % ( label, micro_F1[label]['f1-score'], micro_F1[label]['precision'], micro_F1[label]['recall'] ) )
 
-def exec_task( max_files = 10, max_iter = 20, display_label_subset = [], word2features_func = None, train_crf_model_func = None, dataset_file = None ) :
+def exec_task( max_files = None, max_iter = None, display_label_subset = [], word2features_func = None, train_crf_model_func = None, dataset_file = None ) :
 
     # make a dataset from english NE labelled ontonotes sents
     train_sents, test_sents = create_dataset( max_files = max_files, dataset_file = dataset_file )
@@ -144,8 +143,8 @@ def exec_task( max_files = 10, max_iter = 20, display_label_subset = [], word2fe
     X_test = [sent2features(s, word2features_func = word2features_func) for s in test_sents]
     Y_test = [sent2labels(s) for s in test_sents]
 
-    # print("Sentence Features:\n",X_train[0])
-    # print("\n\nSentence Labels:\n",Y_train[0])
+    final_training_set = X_train + X_test
+    final_training_labels = Y_train + Y_test
 
     # getting the set of labels that exist in the sentences
     set_labels = set([])
@@ -161,7 +160,7 @@ def exec_task( max_files = 10, max_iter = 20, display_label_subset = [], word2fe
     labels.remove('O')
 
     # Train CRF model
-    crf = train_crf_model_func( X_train, Y_train, max_iter, labels )
+    crf = train_crf_model_func( final_training_set, final_training_labels, max_iter, labels )
     
     return crf
 
@@ -275,7 +274,7 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
     chapter_features = [sent2features(paragraph_tokens_pos_tags, word2features_func = task2_word2features) for paragraph_tokens_pos_tags in chapter_tokens_pos_tags]
 
     # load the model
-    crf_model = exec_task( word2features_func = task2_word2features, train_crf_model_func = task1_train_crf_model, max_files = max_files, max_iter = max_iter, display_label_subset = display_label_subset, dataset_file=ontonotes_file )
+    crf_model = exec_task( word2features_func = task2_word2features, train_crf_model_func = task1_train_crf_model, max_files = 350, max_iter = 100, display_label_subset = display_label_subset, dataset_file=ontonotes_file )
 
     # predict the labels for every paragraph in chapter_features
     chapter_labels = [crf_model.predict_single(paragraph_features) for paragraph_features in chapter_features]
