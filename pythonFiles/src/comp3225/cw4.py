@@ -213,7 +213,7 @@ def task1_train_crf_model( X_train, Y_train, max_iter, labels ) :
     crf.fit(X_train, Y_train)
     return crf
 
-def exec_ner( file_chapter = "../../corpus/comp3225/eval_chapter.txt", ontonotes_file = '../../corpus/comp3225/ontonotes_parsed.json' ):
+def exec_ner( file_chapter = "../../corpus/comp3225/trial.txt", ontonotes_file = '../../corpus/comp3225/ontonotes_parsed.json' ):
 
     # open the file and get the sentences
     with open(file_chapter, 'r', encoding='utf8') as f:
@@ -251,10 +251,6 @@ def exec_ner( file_chapter = "../../corpus/comp3225/eval_chapter.txt", ontonotes
     # predict the labels for every paragraph in chapter_features
     chapter_labels = [crf_model.predict_single(paragraph_features) for paragraph_features in chapter_features]
 
-    token_label_pair_list = [[(token, label) for token, label in zip(paragraph_tokens, paragraph_labels)] for paragraph_tokens, paragraph_labels in zip(chapter_tokens, chapter_labels)]
-
-    print("length of token label pair list: " + str(len(token_label_pair_list)))
-
     rough_dictNE = {
         "PERSON": []
     }
@@ -268,7 +264,7 @@ def exec_ner( file_chapter = "../../corpus/comp3225/eval_chapter.txt", ontonotes
                     person += paragraph_tokens[counter - 1] + " "
                 person += paragraph_tokens[counter]
                 counter += 1
-                while paragraph_label[counter] == "I-PERSON":
+                while counter < len(paragraph_label) and paragraph_label[counter] == "I-PERSON":
                     person += " " + paragraph_tokens[counter]
                     counter += 1
                 if person not in rough_dictNE["PERSON"]:
@@ -278,29 +274,32 @@ def exec_ner( file_chapter = "../../corpus/comp3225/eval_chapter.txt", ontonotes
 
     print("Prescanning result",rough_dictNE)
 
-    # scanning each person using nltk pos tagger and only selecting NNP or NNPS or NNS
-    for person in rough_dictNE["PERSON"]:
-        person_tokens = nltk.word_tokenize(person)
-        person_pos_tags = nltk.pos_tag(person_tokens)
-        print(person_pos_tags)
-        for token_pos_tag in person_pos_tags:
-            if token_pos_tag[1] == "NNP" or token_pos_tag[1] == "NNPS" or token_pos_tag[1] == "NNS":
-                continue
-            else:
-                rough_dictNE["PERSON"].remove(person)
-    
-    dictNE = {
-        "PERSON": []
-    }
+    # regex for extracting names
+    names_regex = r"(Mr.?|Mrs.?|Miss.?)? ?([A-Z][a-z]+) ([A-Z][a-z]+)?"
 
-    for person in rough_dictNE["PERSON"]:
-        refined_person = person.replace("’", "")
-        refined_person = refined_person.replace("\"", "")
-        refined_person = refined_person.replace("(", "")
-        refined_person = refined_person.replace(")", "")
-        refined_person = refined_person.rstrip()
-        refined_person = refined_person.lower()
-        dictNE["PERSON"].append(refined_person)
+    # # scanning each person using nltk pos tagger and only selecting NNP or NNPS or NNS
+    # for person in rough_dictNE["PERSON"]:
+    #     person_tokens = nltk.word_tokenize(person)
+    #     person_pos_tags = nltk.pos_tag(person_tokens)
+    #     print(person_pos_tags)
+    #     for token_pos_tag in person_pos_tags:
+    #         if token_pos_tag[1] == "NNP" or token_pos_tag[1] == "NNPS" or token_pos_tag[1] == "NNS":
+    #             continue
+    #         else:
+    #             rough_dictNE["PERSON"].remove(person)
+    
+    # dictNE = {
+    #     "PERSON": []
+    # }
+
+    # for person in rough_dictNE["PERSON"]:
+    #     refined_person = person.replace("’", "")
+    #     refined_person = refined_person.replace("\"", "")
+    #     refined_person = refined_person.replace("(", "")
+    #     refined_person = refined_person.replace(")", "")
+    #     refined_person = refined_person.rstrip()
+    #     refined_person = refined_person.lower()
+    #     dictNE["PERSON"].append(refined_person)
     
 
     print("\n\nFinal result", dictNE)

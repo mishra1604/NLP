@@ -279,7 +279,7 @@ def exec_ner( file_chapter = None, ontonotes_file = None ):
                     person += paragraph_tokens[counter - 1] + " "
                 person += paragraph_tokens[counter]
                 counter += 1
-                while paragraph_label[counter] == "I-PERSON":
+                while counter < len(paragraph_label) and paragraph_label[counter] == "I-PERSON":
                     person += " " + paragraph_tokens[counter]
                     counter += 1
                 if person not in rough_dictNE["PERSON"]:
@@ -309,6 +309,8 @@ def exec_ner( file_chapter = None, ontonotes_file = None ):
         refined_person = refined_person.rstrip()
         refined_person = refined_person.lower()
         dictNE["PERSON"].append(refined_person)
+
+    print(dictNE["PERSON"])
 
     # DO NOT CHANGE THE BELOW CODE WHICH WILL SERIALIZE THE ANSWERS FOR THE AUTOMATED TEST HARNESS TO LOAD AND MARK
 
