@@ -164,61 +164,71 @@ def exec_task( max_files = None, max_iter = None, display_label_subset = [], wor
     
     return crf
 
-def task2_word2features(sent, i):
-
+def increased_context_word2features(sent, i):
     word = sent[i][0]
     postag = sent[i][1]
-
+    
     features = {
-        'word' : word,
-        'postag': postag,
-
-        # token shape
+        'bias': 1.0,
         'word.lower()': word.lower(),
+        'word[-3:]': word[-3:],
+        'word[-2:]': word[-2:],
         'word.isupper()': word.isupper(),
         'word.istitle()': word.istitle(),
         'word.isdigit()': word.isdigit(),
-
-        # token suffix
-        'word.suffix': word.lower()[-3:],
-
-        # POS prefix
+        'postag': postag,
         'postag[:2]': postag[:2],
     }
+    
     if i > 0:
-        word_prev = sent[i-1][0]
-        postag_prev = sent[i-1][1]
+        word1 = sent[i-1][0]
+        postag1 = sent[i-1][1]
         features.update({
-            '-1:word.lower()': word_prev.lower(),
-            '-1:postag': postag_prev,
-            '-1:word.lower()': word_prev.lower(),
-            '-1:word.isupper()': word_prev.isupper(),
-            '-1:word.istitle()': word_prev.istitle(),
-            '-1:word.isdigit()': word_prev.isdigit(),
-            '-1:word.suffix': word_prev.lower()[-3:],
-            '-1:postag[:2]': postag_prev[:2],
+            '-1:word.lower()': word1.lower(),
+            '-1:word.istitle()': word1.istitle(),
+            '-1:word.isupper()': word1.isupper(),
+            '-1:postag': postag1,
+            '-1:postag[:2]': postag1[:2],
         })
     else:
         features['BOS'] = True
-
-    if i < len(sent)-1:
-        word_next = sent[i+1][0]
-        postag_next = sent[i+1][1]
+        
+    if i > 1:
+        word2 = sent[i-2][0]
+        postag2 = sent[i-2][1]
         features.update({
-            '+1:word.lower()': word_next.lower(),
-            '+1:postag': postag_next,
-            '+1:word.lower()': word_next.lower(),
-            '+1:word.isupper()': word_next.isupper(),
-            '+1:word.istitle()': word_next.istitle(),
-            '+1:word.isdigit()': word_next.isdigit(),
-            '+1:word.suffix': word_next.lower()[-3:],
-            '+1:postag[:2]': postag_next[:2],
+            '-2:word.lower()': word2.lower(),
+            '-2:word.istitle()': word2.istitle(),
+            '-2:word.isupper()': word2.isupper(),
+            '-2:postag': postag2,
+            '-2:postag[:2]': postag2[:2],
+        })
+        
+    if i < len(sent)-1:
+        word1 = sent[i+1][0]
+        postag1 = sent[i+1][1]
+        features.update({
+            '+1:word.lower()': word1.lower(),
+            '+1:word.istitle()': word1.istitle(),
+            '+1:word.isupper()': word1.isupper(),
+            '+1:postag': postag1,
+            '+1:postag[:2]': postag1[:2],
         })
     else:
         features['EOS'] = True
-
+        
+    if i < len(sent)-2:
+        word2 = sent[i+2][0]
+        postag2 = sent[i+2][1]
+        features.update({
+            '+2:word.lower()': word2.lower(),
+            '+2:word.istitle()': word2.istitle(),
+            '+2:word.isupper()': word2.isupper(),
+            '+2:postag': postag2,
+            '+2:postag[:2]': postag2[:2],
+        })
+    
     return features
-
 # Function for training the CRF model taken from the sklearn library
 # uses X_Train = sentences features
 # uses Y_Train = sentence label
@@ -271,10 +281,10 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
     chapter_tokens_pos_tags = [[(token, pos_tag) for token, pos_tag in paragraph_pos_tags] for paragraph_pos_tags in chapter_pos_tags]
 
     # get the chapter features
-    chapter_features = [sent2features(paragraph_tokens_pos_tags, word2features_func = task2_word2features) for paragraph_tokens_pos_tags in chapter_tokens_pos_tags]
+    chapter_features = [sent2features(paragraph_tokens_pos_tags, word2features_func = increased_context_word2features) for paragraph_tokens_pos_tags in chapter_tokens_pos_tags]
 
     # load the model
-    crf_model = exec_task( word2features_func = task2_word2features, train_crf_model_func = task1_train_crf_model, max_files = 350, max_iter = 100, display_label_subset = display_label_subset, dataset_file=ontonotes_file )
+    crf_model = exec_task( word2features_func = increased_context_word2features, train_crf_model_func = task1_train_crf_model, max_files = 600, max_iter = 100, display_label_subset = display_label_subset, dataset_file=ontonotes_file )
 
     # predict the labels for every paragraph in chapter_features
     chapter_labels = [crf_model.predict_single(paragraph_features) for paragraph_features in chapter_features]
