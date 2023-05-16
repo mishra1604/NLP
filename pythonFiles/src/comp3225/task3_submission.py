@@ -26,6 +26,36 @@ logger = logging.getLogger( __name__ )
 logging.basicConfig( level=logging.INFO, format=LOG_FORMAT )
 logger.info('logging started')
 
+from nltk.corpus import gazetteers
+
+norp_list = gazetteers.words('nationalities.txt')
+norp_list = set(norp_list)
+
+number_list = set([
+    "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+    "sixteen", "seventeen", "eighteen", "nineteen", "twenty", "thirty", "fourty", "fifty",
+    "sixty", "seventy", "eighty", "ninety", "hundred", "onehundred", "one-hundred", "thousand", "million"
+    ])
+
+date_list = set([
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "day", "week", "month", "year"
+    "jan", "january", "feb", "february", "mar", "march", "apr", "april", "may", "jun", "june", "jul", "july",
+    "aug", "august", "sep", "september", "oct", "october", "nov", "november", "dec", "december", "holiday", "holidays"
+])
+
+time_list = set(["second", "seconds", "minute", "minutes", "hour", "hours", "time", "clock", "o'clock", "past", "oclock"])
+
+ordinal_list = set([
+		"first", "second", "third", "fourth", "fifth", "sixth", "seventh",
+		"eigth", "ninth", "tenth", "eleventh", "twelth", "thirteenth",
+		"fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth",
+		"nineteenth", "twentieth", "thirtieth", "fourtieth", "fiftieth", 
+		"sixtieth", "seventieth", "eightieth", "ninetieth", "hundreth", "thousandth",
+		"millionth", "firstly", "secondly", "thirdly", "fourthly", "fifthly", "sixthly",
+		"seventhly", "eigthly", "ninethly", "tenthly"
+	])
+
 
 display_label_subset = [ 'B-DATE', 'I-DATE', 'O', 'B-CARD', 'I-CARD', 'B-ORD', 'I-ORD', 'B-NORP', 'I-NORP']
 
@@ -164,70 +194,81 @@ def exec_task( max_files = None, max_iter = None, display_label_subset = [], wor
     
     return crf
 
-def increased_context_word2features(sent, i):
+def task2_word2features(sent, i):
+
     word = sent[i][0]
     postag = sent[i][1]
-    
+
     features = {
-        'bias': 1.0,
+        'word' : word,
+        'postag': postag,
+
+        # token shape
         'word.lower()': word.lower(),
-        'word[-3:]': word[-3:],
-        'word[-2:]': word[-2:],
         'word.isupper()': word.isupper(),
         'word.istitle()': word.istitle(),
         'word.isdigit()': word.isdigit(),
-        'postag': postag,
+
+        # token suffix
+        'word.suffix': word.lower()[-3:],
+
+        # POS prefix
         'postag[:2]': postag[:2],
+
+        'word.in_norp_list': word.lower() in norp_list,
+
+        'word.in_number_list': word.lower() in number_list,
+
+        'word.in_date_list': word.lower() in date_list,
+
+        'word.in_time_list': word.lower() in time_list,
+
+        'word.in_ord_list': word.lower() in ordinal_list
     }
-    
     if i > 0:
-        word1 = sent[i-1][0]
-        postag1 = sent[i-1][1]
+        word_prev = sent[i-1][0]
+        postag_prev = sent[i-1][1]
         features.update({
-            '-1:word.lower()': word1.lower(),
-            '-1:word.istitle()': word1.istitle(),
-            '-1:word.isupper()': word1.isupper(),
-            '-1:postag': postag1,
-            '-1:postag[:2]': postag1[:2],
+            '-1:word.lower()': word_prev.lower(),
+            '-1:postag': postag_prev,
+            '-1:word.lower()': word_prev.lower(),
+            '-1:word.isupper()': word_prev.isupper(),
+            '-1:word.istitle()': word_prev.istitle(),
+            '-1:word.isdigit()': word_prev.isdigit(),
+            '-1:word.suffix': word_prev.lower()[-3:],
+            '-1:postag[:2]': postag_prev[:2],
+
+            '-1:word.in_norp_list': word_prev.lower() in norp_list,
+            '-1:word.in_number_list': word_prev.lower() in number_list,
+            '-1:word.in_date_list': word_prev.lower() in date_list,
+            '-1:word.in_time_list': word_prev.lower() in time_list,
+            '-1:word.in_ord_list': word_prev.lower() in ordinal_list
         })
     else:
         features['BOS'] = True
-        
-    if i > 1:
-        word2 = sent[i-2][0]
-        postag2 = sent[i-2][1]
-        features.update({
-            '-2:word.lower()': word2.lower(),
-            '-2:word.istitle()': word2.istitle(),
-            '-2:word.isupper()': word2.isupper(),
-            '-2:postag': postag2,
-            '-2:postag[:2]': postag2[:2],
-        })
-        
+
     if i < len(sent)-1:
-        word1 = sent[i+1][0]
-        postag1 = sent[i+1][1]
+        word_next = sent[i+1][0]
+        postag_next = sent[i+1][1]
         features.update({
-            '+1:word.lower()': word1.lower(),
-            '+1:word.istitle()': word1.istitle(),
-            '+1:word.isupper()': word1.isupper(),
-            '+1:postag': postag1,
-            '+1:postag[:2]': postag1[:2],
+            '+1:word.lower()': word_next.lower(),
+            '+1:postag': postag_next,
+            '+1:word.lower()': word_next.lower(),
+            '+1:word.isupper()': word_next.isupper(),
+            '+1:word.istitle()': word_next.istitle(),
+            '+1:word.isdigit()': word_next.isdigit(),
+            '+1:word.suffix': word_next.lower()[-3:],
+            '+1:postag[:2]': postag_next[:2],
+
+            '+1:word.in_norp_list': word_next.lower() in norp_list,
+            '+1:word.in_number_list': word_next.lower() in number_list,
+            '+1:word.in_date_list': word_next.lower() in date_list,
+            '+1:word.in_time_list': word_next.lower() in time_list,
+            '+1:word.in_ord_list': word_next.lower() in ordinal_list
         })
     else:
         features['EOS'] = True
-        
-    if i < len(sent)-2:
-        word2 = sent[i+2][0]
-        postag2 = sent[i+2][1]
-        features.update({
-            '+2:word.lower()': word2.lower(),
-            '+2:word.istitle()': word2.istitle(),
-            '+2:word.isupper()': word2.isupper(),
-            '+2:postag': postag2,
-            '+2:postag[:2]': postag2[:2],
-        })
-    
+
     return features
 # Function for training the CRF model taken from the sklearn library
 # uses X_Train = sentences features
@@ -254,24 +295,26 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
 	# hardcoded output to show exactly what is expected to be serialized (you should change this)
 	# only the allowed types for task 3 DATE, CARDINAL, ORDINAL, NORP will be serialized
 
-        # open the file and get the sentences
-    with open(file_chapter, 'r') as f:
-        lines = f.readlines()
+    # open the file and get the sentences
+    chapter_lines = []
+
+    for file_line in codecs.open(file_chapter, "r", encoding='utf-8'):
+        chapter_lines.append(file_line)
 
     chapter_paragraphs = []
-    
+
     paragraph_string = ""
-    for line in lines:
+    for line in chapter_lines:
         main_string = line
-        if len(main_string) == 1:
+        if len(main_string) == 2:
             if len(paragraph_string) > 0:
                 chapter_paragraphs.append(paragraph_string)
                 paragraph_string = ""
         else:
-            main_string = main_string.replace("\n", " ")
+            main_string = main_string.replace("\r\n", " ")
             paragraph_string += main_string
     
-    # create tokens for all the paragraphs in the chapter
+        # create tokens for all the paragraphs in the chapter
     chapter_tokens = [nltk.word_tokenize(paragraph) for paragraph in chapter_paragraphs]
 
     # get the POS tags for the tokens
@@ -281,14 +324,14 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
     chapter_tokens_pos_tags = [[(token, pos_tag) for token, pos_tag in paragraph_pos_tags] for paragraph_pos_tags in chapter_pos_tags]
 
     # get the chapter features
-    chapter_features = [sent2features(paragraph_tokens_pos_tags, word2features_func = increased_context_word2features) for paragraph_tokens_pos_tags in chapter_tokens_pos_tags]
+    chapter_features = [sent2features(paragraph_tokens_pos_tags, word2features_func = task2_word2features) for paragraph_tokens_pos_tags in chapter_tokens_pos_tags]
 
-    # load the model
-    crf_model = exec_task( word2features_func = increased_context_word2features, train_crf_model_func = task1_train_crf_model, max_files = 600, max_iter = 100, display_label_subset = display_label_subset, dataset_file=ontonotes_file )
+
+    crf_model =  exec_task( word2features_func = task2_word2features, train_crf_model_func = task1_train_crf_model, max_files = 350, max_iter = 100, display_label_subset = display_label_subset, dataset_file = '../../corpus/comp3225/ontonotes_parsed.json' )
 
     # predict the labels for every paragraph in chapter_features
     chapter_labels = [crf_model.predict_single(paragraph_features) for paragraph_features in chapter_features]
-    
+
     dictNE = {
         "CARDINAL": [],
         "ORDINAL": [],
@@ -308,6 +351,7 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
                     cardinal += " " + paragraph_tokens[counter]
                     counter += 1
                 if cardinal not in dictNE["CARDINAL"]:
+                    cardinal.strip()
                     dictNE["CARDINAL"].append(cardinal.lower())
             elif paragraph_label[counter] == "B-DATE":
                 date = ""
@@ -317,6 +361,7 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
                     date += " " + paragraph_tokens[counter]
                     counter += 1
                 if date not in dictNE["DATE"]:
+                    date.strip()
                     dictNE["DATE"].append(date.lower())
             elif paragraph_label[counter] == "B-ORDINAL":
                 ordinal = ""
@@ -326,6 +371,7 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
                     ordinal += " " + paragraph_tokens[counter]
                     counter += 1
                 if ordinal not in dictNE["ORDINAL"]:
+                    ordinal.strip()
                     dictNE["ORDINAL"].append(ordinal.lower())
             elif paragraph_label[counter] == "B-NORP":
                 norp = ""
@@ -335,6 +381,7 @@ def exec_ner( file_chapter = None, ontonotes_file = None ) :
                     norp += " " + paragraph_tokens[counter]
                     counter += 1
                 if norp not in dictNE["NORP"]:
+                    norp.strip()
                     dictNE["NORP"].append(norp.lower())
             else:
                 counter += 1
